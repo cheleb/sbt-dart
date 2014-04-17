@@ -79,6 +79,8 @@ trait DartProcessor extends DartSdk {
     import scala.sys.process._
     val d2js = Process(cmd)
 
+    println("Run ")
+    
     var stdout = List[String]()
     var stderr = List[String]()
     val exit = d2js ! ProcessLogger((s) => stdout ::= s, (s) => stderr ::= s)
