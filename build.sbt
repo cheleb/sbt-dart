@@ -6,7 +6,11 @@ name := "sbt-dart"
 
 version := "1.0.0-SNAPSHOT"
 
-addSbtPlugin("com.typesafe.sbt" % "sbt-web" % "1.0.0-M2")
+resolvers += "Typesafe repository" at "http://repo.typesafe.com/typesafe/releases/"
+
+addSbtPlugin("com.typesafe.sbt" % "sbt-web" % "1.0.0")
+
+addSbtPlugin("com.typesafe.play" % "sbt-plugin" % "2.3.0")
 
 publishMavenStyle := false
 
