@@ -6,6 +6,10 @@ import com.typesafe.sbt.web.SbtWeb._
 import com.typesafe.sbt.web.pipeline.Pipeline
 import sbt.Keys.baseDirectory
 import sbt.Keys.unmanagedResourceDirectories
+import sbt.Keys.resourceGenerators
+import sbt.Keys.resourceDirectories
+
+import sbt.Keys.state
 import play.PlayRunHook
 import java.net.InetSocketAddress
 
@@ -28,7 +32,6 @@ object Import {
 
 object SbtDart extends Plugin with DartProcessor {
 
-
   val autoImport = Import
 
   import SbtWeb.autoImport._
@@ -42,11 +45,16 @@ object SbtDart extends Plugin with DartProcessor {
     dist <<= dist dependsOn (dart2js),
     stage <<= stage dependsOn (dart2js),
     target in dart2js := webTarget.value / dart2js.key.label,
-    
+
     unmanagedResourceDirectories in Assets <+= (target in dart2js)(base => base / "web"),
+
+    playRunHooks <+= (baseDirectory, target in dart2js).map { (base, output) => Pub(base, output.absolutePath) },
+
+    resourceDirectories in Compile <+= baseDirectory / "web",
+
+    resourceGenerators in Assets <+= dart2jsCompiler,
     
-    playRunHooks <+= (baseDirectory, target in dart2js).map { (base, output) => Pub(base, output.absolutePath)},
-    
+
     dartWeb in dart2js := baseDirectory.value / "web")
 
   def dartSources: Def.Initialize[Task[Pipeline.Stage]] = Def.task {
@@ -93,20 +101,6 @@ object SbtDart extends Plugin with DartProcessor {
     }
   }
 
-  import scala.language.postfixOps
-  private def cmd(name: String, base: File): Command = {
-    if (!base.exists()) (base.mkdirs())
-    Command.args(name, "<" + name + "-command>") {
-      (state, args) =>
-        if (System.getProperty("os.name").startsWith("Windows")) {
-          Process("cmd" :: "/c" :: name :: args.toList, base) !<
-        } else {
-          Process(name :: args.toList, base) !<
-        }
-        state
-    }
-  }
-
   object Pub {
     def apply(base: File, output: String): PlayRunHook = {
 
@@ -115,7 +109,7 @@ object SbtDart extends Plugin with DartProcessor {
         var process: Option[Process] = None
 
         override def afterStarted(addr: InetSocketAddress): Unit = {
-          process = runPub(base, output,  Nil)
+          process = runPub(base, output, Nil)
         }
 
         override def afterStopped(): Unit = {
@@ -127,5 +121,20 @@ object SbtDart extends Plugin with DartProcessor {
       PubProcess
     }
   }
+
+  def Dart2jsCompiler(name: String,
+    watch: File => PathFinder,
+    proc: DartProcessor): sbt.Def.Initialize[sbt.Task[Seq[java.io.File]]] = {
+    (state, baseDirectory) map { (state, base) =>
+      {
+        state.log.info("OOOOOOOO")
+        Nil
+      }
+    }
+  }
+
+  val dart2jsCompiler = Dart2jsCompiler("dart" + "-js-compiler",
+    src => (src ** "*") --- (src ** "*.dart.*") --- (src ** "out" ** "*"),
+    null)
 
 }
