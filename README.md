@@ -1,7 +1,7 @@
 sbt-dart
 ========
 
-sbt-dart is a simple sbt plugin to use dart with [playframeork](http://wwwplayframeork.org).
+sbt-dart is a simple sbt plugin to use dart with [playframework](http://www.playframework.org).
 
 For the moment, it just run `pub build` before **run** and **dist** task. 
 
