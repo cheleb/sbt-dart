@@ -89,7 +89,7 @@ object SbtDart extends Plugin with DartProcessor {
   }
 
   private def runPub(base: sbt.File, output: String, args: List[String]) = {
-    println(s"Will run: pub --gruntfile=$output $args in ${base.getPath}")
+    println(s"Will run: pub --output=$output $args in ${base.getPath}")
     if (System.getProperty("os.name").startsWith("Windows")) {
       val process: ProcessBuilder = Process("cmd" :: "/c" :: "pub.exe" :: "build" :: "--output=" + output :: args, base)
       println(s"Will run: ${process.toString} in ${base.getPath}")
