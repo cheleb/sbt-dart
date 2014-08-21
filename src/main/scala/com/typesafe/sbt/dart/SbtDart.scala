@@ -50,12 +50,9 @@ object SbtDart extends Plugin with DartProcessor {
 
     playRunHooks <+= (baseDirectory, target in dart2js).map { (base, output) => Pub(base, output.absolutePath) },
 
-    resourceDirectories in Compile <+= baseDirectory / "web",
-
-    resourceGenerators in Assets <+= dart2jsCompiler,
-    
-
-    dartWeb in dart2js := baseDirectory.value / "web")
+    resourceDirectories in Assets <+= baseDirectory / "web",
+    dartWeb in Assets := baseDirectory.value / "web",
+    resourceGenerators in Assets <+= dart2jsCompiler)
 
   def dartSources: Def.Initialize[Task[Pipeline.Stage]] = Def.task {
     mappings =>
@@ -125,16 +122,24 @@ object SbtDart extends Plugin with DartProcessor {
   def Dart2jsCompiler(name: String,
     watch: File => PathFinder,
     proc: DartProcessor): sbt.Def.Initialize[sbt.Task[Seq[java.io.File]]] = {
-    (state, baseDirectory) map { (state, base) =>
+    (state, baseDirectory, dartWeb in Assets, target in dart2js) map { (state, base, web, dst) =>
       {
-        state.log.info("OOOOOOOO")
-        Nil
+        (watch(web) filter (f => f != web) x relativeTo(Seq(base))).flatMap {
+          case (f, n) =>
+            val target = dst / n
+            if (f.isDirectory())
+              List()
+            else {
+              IO.copyFile(f, target, true)
+              List(target)
+            }
+        }
       }
     }
   }
 
   val dart2jsCompiler = Dart2jsCompiler("dart" + "-js-compiler",
-    src => (src ** "*") --- (src ** "*.dart.*") --- (src ** "out" ** "*"),
+    src => (src ** "*.dart"),
     null)
 
 }
